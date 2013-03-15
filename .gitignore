@@ -1,0 +1,7 @@
+*.pyc
+*.gz
+*.txt
+*.csv
+*.json
+*.py~
+*.py#
