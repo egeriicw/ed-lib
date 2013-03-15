@@ -47,6 +47,17 @@ import json
 import numpy as np
 import pandas as pd
 import datetime as dt
+import re
+import unittest
+
+import getpass
+
+
+##########################
+# User-defined libraries #
+##########################
+
+from location import Location
 
 class EnergyDataFile():
     # Attributes
@@ -56,23 +67,79 @@ class EnergyDataFile():
     datalines = []
     numDatalines = ""
     filetype = ""
+    oDataDict = dict()
+    dicttest = dict()
+    __type__ = "EnergyDataFile"
+
+
     
     def __init__(self, filename=None, filetype=None):
         self.filename = filename
         self.headerset = False
         self.filetype = filetype
+        self.oDataDict = {}
+        self.dicttest = {}
+        self.__type__ = "EnergyDataFile"
+
+    def __type__(self):
+        return self.__type__
+        
 
     def read_GreenButton(self, header=None):
         print "Read GreenButton Data"
         return 0
 
-    def print_File(self):
+    def print_Header(self):
         print self.headerrow
+    
+    def print_Data(self):
         print self.datalines
 
     def read_JSON(self, header=None):
         print "Read JSON"
         return 0
+
+    def getDict(self):
+        from operator import itemgetter
+        self.oDataDict.setdefault("Location", {})
+        
+        labels = []
+        account = {}
+
+        for i in range(0, len(self.headerrow)):
+            labels.append(self.headerrow[i].replace('(', '').replace(')','').replace(" ", ''))
+            
+        print labels[4]
+
+        for i, val in enumerate(self.datalines):
+            
+            account.setdefault("Account", {})
+            account["Account"]= {}
+            
+            #print i
+            data = dict(zip(itemgetter(5, 6, 7, 8, 9, 10, 11, 12)(labels), itemgetter(5,6,7,8,9,10,11,12)(val)))
+            accountdata = dict(zip(itemgetter(4, 1, 18)(labels), itemgetter(4,1,18)(val)))     
+            
+            #account["Account"][val[4]] = {}
+            if account["Account"].has_key(val[4]):
+                account["Account"][val[4]]["data"] = data
+
+            else:
+                account["Account"] = accountdata
+                account["Account"][val[4]] = {}
+                account["Account"][val[4]]["data"] = data
+            
+                
+
+            print account
+            
+            #self.oDataDict["Location"][i] = {}
+            #self.oDataDict["Location"][i]["data"] = data
+
+        
+        #print self.oDataDict
+                
+
 
     def read_CSV(self, header=None):
         # Determine what type of input file to import.
@@ -111,49 +178,22 @@ class EnergyDataFile():
         else:
             print "Must provide filename"
 
+    def read_CSVDictTest(self, filename=None):
+       
+        print 'read csv dict test'
+        sourcefile = open('../data/input/' + self.filename)
 
-class EnergyData():
-    
-    # Attributes
-    name = ""
-    mo = ""
-    dy = ""
-    yr = ""
-    date = ""
-    
-    periodyr = ""
-    periodmo = ""
+        reader = csv.DictReader(sourcefile)
+        reader.next()
 
-    startdate = ""
-    enddate = ""
-    days = ""
-    resource = ""
-    
-    fisyr = ""
-    calyr = ""
-    
-    use = ""
-    demand = ""
+        out = json.dumps([row for row in reader])
 
-    totcost = ""
+        jsonFile = open('../data/output/jsontest.json', 'wb')
+        jsonFile.write(out)
 
-    rate = ""
+    def write_JSON(self):
+        return 0
 
-    # Methods
-
-    def __init__(self):
-        print "EnergyData object created."
-            
-    def setDate(self, mo, dy, yr):
-        self.mo = mo
-        self.dy = dy
-        self.yr = yr
-        self.date = dt.datetime(yr, mo, dy)
-
-        if mo < 7:
-            self.ficyr = yr
-        else:
-            self.ficyr = int(yr) + 1
 
 class AuditManager(): 
     print "Audit Manager"
@@ -174,129 +214,22 @@ class Energy():
         self.meter = ""
         self.ID = ""
 
-class Meter():
-    meterNumber = ""
-    resource = ""
-    energy = []
-
-    def __init__(self, meterNumber=None):
-        self.meterNumber = meterNumber
-        self.resource = ""
-        self.energy = []
-
-    def getMeter(self):
-        return self.meterNumber
-
-    def printMeter(self):
-        print "--Meter: ", self.meterNumber
-        print "-------: ", self.resource
-        print "-------: ", self.energy
-
-class Account():
-    accountNumber = ""
-    data = []
-    meter = ""
-    
-    def __init__(self, accountNumber=None):
-        self.accountNumber = accountNumber
-        self.meter = []
-
-    def setMeter(self, meterNumber=None):
-        index = None
-        
-        for i, val in enumerate(self.meter):
-            if val.getMeter() == str(meterNumber):
-                index = i
-            
-        if index == None:
-            newMeter = Meter(str(meterNumber))
-            self.meter.append(newMeter)
-        else:
-            print "Meter Already Exists"
-
-    def getAccount(self):
-        return self.accountNumber
-    
-    def findMeter(self, meterNumber=None):
-        found = None
-        if meterNumber == None:
-            print "No account number to search."
-        else:
-            for i, val in enumerate(self.meter):
-                if val.getMeter() == str(meterNumber):
-                    found = i
-        
-        return found
-
-    def printAccount(self):
-        print "Account: ", self.accountNumber
-        for i, val in enumerate(self.meter):
-            val.printMeter()
-
-class Location():
-    name = ""
-    address1 = ""
-    address2 = ""
-    address3 = ""
-    city = ""
-    state = ""
-    zipcode = ""
-    latitude = ""
-    longitude = ""
-    account = ""
-
-    def __init__(self, name=None):
-        self.name = name
-        self.account = []
-
-    def setAccount(self, accountNumber=None, meterNumber=None):
-        index = None
-        for i, val in enumerate(self.account):
-            if val.getAccount() == str(accountNumber):
-                index = i
-        
-        if index == None:
-            newAccount = Account(str(accountNumber))
-            newAccount.setMeter(meterNumber)
-            self.account.append(newAccount)
-        else:
-            print "Existing Account: ", self.account[index]
-            self.account[index].setMeter(meterNumber)
-
-    def printLoc(self):
-        print "Name :", self.name
-        for i, val in enumerate(self.account):
-            val.printAccount()
-
-class Organization():
-
-    locations = []
-
-    def __init__(self, orgName=None):
-        self.orgName = orgName
-        self.locations = []
-
-class Portfolio():
-
-    organizations = []
-    
-    def __init__(self):
-        self.organizations = []
-
-    def addOrganization(self, organization=None):
-        self.organization.append(Organization())
-
 def main():
-    
-    edf = EnergyDataFile('EnergyReportingWorkingBook.csv')
-    edf.read_CSV(header=True)
+    edf = EnergyDataFile('EnergyReportingtest.csv')
+    #edf.read_CSV(header=True)
+    edf.read_CSVDictTest()
+    edf.print_Header()
+    #edf.getDict()
     loc = Location("City Hall")
     loc.setAccount("123456789", "11111")
-    loc.setAccount("555555555", "55555")
-    loc.setAccount("123456789", "22222")
-    loc.setAccount("987654321", "33333")
-    loc.setAccount("987654321", "33333")
+    #loc.setAccount("555555555", "55555")
+    #loc.setAccount("123456789", "22222")
+    #loc.setAccount("987654321", "33333")
+    #loc.setAccount("987654321", "33333")
     loc.printLoc()
+
+    print edf.__type__
 
 if __name__ == "__main__":
     main()
+
