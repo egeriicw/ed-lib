@@ -5,7 +5,7 @@ __auth__ = ["Bill Eger"]
 
 ## TODO:  Need to add comments and doc language
 
-class UtilityData():
+class UtilityData:
     
     # Attributes
     name = ""
@@ -29,8 +29,11 @@ class UtilityData():
     fisyr = ""
     calyr = ""
     
-    use = ""
-    demand = ""
+    actualuse = ""
+    billeduse = ""
+    actualDemand = ""
+    billeddemand = ""
+
 
     totcost = ""
 
@@ -39,10 +42,12 @@ class UtilityData():
     def __init__(self):
         self.startdate = ""
         self.enddate = ""
-        self.use = np.NaN
-        self.demand = np.NaN
+        self.actualuse = np.NaN
+        self.actualDemand = np.NaN
         self.totcost = np.NaN
         self.len = 5
+        self.billeduse = np.NaN
+        self.billedemand = np.NaN
 
 
         print "UtilityData object created."
@@ -115,27 +120,27 @@ class UtilityData():
     def getCalYear(self):
         return self.calyr
 
-    def setUse(self, use=None):
-        if use != None:
-            self.use = use
+    def setActualUse(self, actualuse=None):
+        if actualuse != None:
+            self.actualuse = actualuse
         else:
-            self.use = np.NaN    
+            self.actualuse = np.NaN    
 
-        return self.use
+        return self.actualuse
 
-    def getUse(self):
-        return self.use
+    def getActualUse(self):
+        return self.actualuse
 
-    def setDemand(self, demand=None):
-        if demand != None:
-            self.demand = demand
+    def setactualDemand(self, actualDemand=None):
+        if actualDemand != None:
+            self.actualDemand = actualDemand
         else:
-            self.demand = np.NaN
+            self.actualDemand = np.NaN
 
-        return self.demand
+        return self.actualDemand
 
-    def getDemand(self):
-        return self.demand
+    def getactualDemand(self):
+        return self.actualDemand
 
     def setTotCost(self, totcost=None):
         if totcost != None:
@@ -160,30 +165,33 @@ class UtilityData():
                 msg = "Success"
 
 
-            self.setUse(data[2])
-            self.setDemand(data[3])
+            self.setActualUse(data[2])
+            self.setactualDemand(data[3])
             self.setTotCost(data[4])
 
         return status, msg
 
     def getUtilityData(self):
-        return self.startdate, self.enddate, self.use, self.demand, self.totcost
+        return {"data": {"startdate": self.startdate.__str__(), 
+                "enddate": self.enddate.__str__(), 
+                "use": self.actualuse, 
+                "demand": self.actualDemand, 
+                "totalcost": self.totcost}}
 
 
 def main():
 
     # Testing.  Need to implement unittests
-
     ud = UtilityData()
     ud.setStartDate("6/15/2013")
     ud.setEndDate("7/12/2013")
-    print ud.getStartDate()
-    print ud.getEndDate()
-    print ud.setUse(2000)
-    print ud.getUse()
+    ud.setActualUse(2000)
     print ud.getUtilityData()
+
+
+
+
     ux = UtilityData()
-    print ux.getUtilityData()
     ux.setTotCost(1000)
     ux.setStartDate("3/12/2012")
     print ux.getUtilityData()
